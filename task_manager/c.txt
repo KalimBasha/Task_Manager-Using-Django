@@ -1,0 +1,454 @@
+Here’s a step-by-step guide to complete the assignment:
+
+1. Setting Up the Django Project
+Create a new Django project:
+bash
+Copy code
+django-admin startproject task_manager
+cd task_manager
+Create an app for task management:
+bash
+Copy code
+python manage.py startapp tasks
+
+2. Install Required Packages
+Install packages for Google OAuth and email functionalities:
+
+bash
+Copy code
+pip install django-allauth google-auth-oauthlib
+Add the required apps to INSTALLED_APPS in settings.py:
+
+python
+Copy code
+INSTALLED_APPS += [
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'tasks',
+]
+Set the site ID and authentication backend:
+
+python
+Copy code
+SITE_ID = 1
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+3. Google OAuth Setup
+Create a project in Google Cloud Console.
+Enable the "Google+ API" or "Google Identity Services".
+Add authorized redirect URIs (e.g., http://127.0.0.1:8000/accounts/google/login/callback/).
+Download the credentials (JSON file) and store it securely.
+Update settings.py with Google credentials:
+
+python
+Copy code
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': '<YOUR_CLIENT_ID>',
+            'secret': '<YOUR_CLIENT_SECRET>',
+        }
+    }
+}
+
+4. Task Management
+Create the task model in tasks/models.py:
+
+python
+Copy code
+from django.db import models
+from django.contrib.auth.models import User
+
+class Task(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+Run migrations:
+
+bash
+Copy code
+python manage.py makemigrations
+python manage.py migrate
+Create views for task CRUD operations in tasks/views.py.
+
+Add URLs for these views in tasks/urls.py.
+
+5. Admin Panel Enhancements
+Create a model for storing Google OAuth keys:
+python
+Copy code
+class OAuthKey(models.Model):
+    name = models.CharField(max_length=100)
+    client_id = models.CharField(max_length=255)
+    client_secret = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+Add the ability to send invitation emails in the admin panel.
+
+6. Email Invitations
+In settings.py, configure email settings for sending registration links:
+
+python
+Copy code
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = '<your-smtp-server>'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '<your-email>'
+EMAIL_HOST_PASSWORD = '<your-email-password>'
+
+7. GitHub Repository
+Initialize a GitHub repository:
+bash
+Copy code
+git init
+git remote add origin <repo_url>
+Push your code:
+bash
+Copy code
+git add .
+git commit -m "Initial commit"
+git push origin main
+Test all features, document the steps in a README.md, and include instructions for setting up the project.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Here’s a simple implementation for a **Django project with Google Login, Task Management, and Admin Features**. 
+
+---
+
+### **1. Setup the Project**
+#### Create and Activate the Virtual Environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # For Windows: venv\Scripts\activate
+pip install django
+```
+
+#### Start a Django Project:
+```bash
+django-admin startproject task_manager
+cd task_manager
+python manage.py startapp tasks
+```
+
+Install required packages:
+```bash
+pip install django-allauth mysqlclient
+```
+
+---
+
+### **2. Configure `settings.py`**
+
+#### Installed Apps:
+Add the following to `INSTALLED_APPS`:
+```python
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'tasks',
+]
+```
+
+#### Middleware:
+Ensure the default middleware is present:
+```python
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+```
+
+#### Authentication Backends:
+```python
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+```
+
+#### Site ID:
+```python
+SITE_ID = 1
+```
+
+#### Google OAuth Settings:
+```python
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': '<your-client-id>',
+            'secret': '<your-client-secret>',
+        },
+        'SCOPE': ['profile', 'email'],
+    }
+}
+```
+
+#### Database:
+Use **MySQL**:
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'task_manager',
+        'USER': 'your_mysql_user',
+        'PASSWORD': 'your_mysql_password',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
+}
+```
+
+#### Static Files:
+```python
+STATIC_URL = '/static/'
+```
+
+---
+
+### **3. Task Management App**
+
+#### Models (`tasks/models.py`):
+```python
+from django.db import models
+from django.contrib.auth.models import User
+
+class Task(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+```
+
+#### Admin (`tasks/admin.py`):
+```python
+from django.contrib import admin
+from .models import Task
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'created_at')
+    search_fields = ('title', 'description')
+```
+
+#### Views (`tasks/views.py`):
+```python
+from django.shortcuts import render, redirect
+from .models import Task
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def task_list(request):
+    tasks = Task.objects.filter(user=request.user)
+    return render(request, 'tasks/task_list.html', {'tasks': tasks})
+
+@login_required
+def task_create(request):
+    if request.method == 'POST':
+        title = request.POST['title']
+        description = request.POST['description']
+        Task.objects.create(user=request.user, title=title, description=description)
+        return redirect('task_list')
+    return render(request, 'tasks/task_form.html')
+
+@login_required
+def task_edit(request, pk):
+    task = Task.objects.get(id=pk, user=request.user)
+    if request.method == 'POST':
+        task.title = request.POST['title']
+        task.description = request.POST['description']
+        task.save()
+        return redirect('task_list')
+    return render(request, 'tasks/task_form.html', {'task': task})
+
+@login_required
+def task_delete(request, pk):
+    task = Task.objects.get(id=pk, user=request.user)
+    task.delete()
+    return redirect('task_list')
+```
+
+#### URLs (`tasks/urls.py`):
+```python
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.task_list, name='task_list'),
+    path('create/', views.task_create, name='task_create'),
+    path('<int:pk>/edit/', views.task_edit, name='task_edit'),
+    path('<int:pk>/delete/', views.task_delete, name='task_delete'),
+]
+```
+
+Include the `tasks` URLs in the main `urls.py`:
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('tasks/', include('tasks.urls')),
+    path('accounts/', include('allauth.urls')),  # For Google login
+]
+```
+
+---
+
+### **4. Templates**
+
+#### Base Template (`templates/base.html`):
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'task_list' %}">Tasks</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'account_logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'account_login' %}">Login</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
+```
+
+#### Task List (`templates/tasks/task_list.html`):
+```html
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Your Tasks</h1>
+<a href="{% url 'task_create' %}">Create New Task</a>
+<ul>
+    {% for task in tasks %}
+        <li>
+            <strong>{{ task.title }}</strong> - {{ task.description }}
+            <a href="{% url 'task_edit' task.id %}">Edit</a>
+            <a href="{% url 'task_delete' task.id %}">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}
+```
+
+#### Task Form (`templates/tasks/task_form.html`):
+```html
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{% if task %}Edit{% else %}Create{% endif %} Task</h1>
+<form method="post">
+    {% csrf_token %}
+    <label for="title">Title:</label>
+    <input type="text" name="title" id="title" value="{{ task.title|default:'' }}">
+    <br>
+    <label for="description">Description:</label>
+    <textarea name="description" id="description">{{ task.description|default:'' }}</textarea>
+    <br>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}
+```
+
+---
+
+### **5. Final Steps**
+
+1. Apply Migrations:
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+
+2. Create a Superuser for Admin:
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+3. Run the Server:
+   ```bash
+   python manage.py runserver
+   ```
+
+4. Access the app:
+   - Admin Panel: [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin)
+   - Tasks: [http://127.0.0.1:8000/tasks](http://127.0.0.1:8000/tasks)
+
+---
+
+### **Deliverable**
+The project contains:
+- **Google Login**: Integrated with `django-allauth`.
+- **Task Management**: CRUD functionality for personal tasks.
+- **Admin Features**: Manage tasks and users via the Django admin panel.
+
+You can push this code to a GitHub repository for submission.
